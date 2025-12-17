@@ -1,0 +1,106 @@
+{
+  "summary": {
+    "totalOrders": 8450,
+    "totalRevenue": 1250000,
+    "avgOrderValue": 148
+  },
+  "salesByCategory": [
+    {
+      "category": "Electronics",
+      "revenue": 450000,
+      "orders": 2800,
+      "products": [
+        {
+          "name": "Mobile Phones",
+          "revenue": 200000
+        },
+        {
+          "name": "Laptops",
+          "revenue": 150000
+        },
+        {
+          "name": "Accessories",
+          "revenue": 100000
+        }
+      ]
+    },
+    {
+      "category": "Fashion",
+      "revenue": 320000,
+      "orders": 3400,
+      "products": [
+        {
+          "name": "Men Clothing",
+          "revenue": 120000
+        },
+        {
+          "name": "Women Clothing",
+          "revenue": 140000
+        },
+        {
+          "name": "Footwear",
+          "revenue": 60000
+        }
+      ]
+    },
+    {
+      "category": "Home & Kitchen",
+      "revenue": 180000,
+      "orders": 1500,
+      "products": [
+        {
+          "name": "Furniture",
+          "revenue": 90000
+        },
+        {
+          "name": "Appliances",
+          "revenue": 60000
+        },
+        {
+          "name": "Decor",
+          "revenue": 30000
+        }
+      ]
+    }
+  ],
+  "monthlySales": [
+    {
+      "month": "Jan",
+      "revenue": 90000
+    },
+    {
+      "month": "Feb",
+      "revenue": 85000
+    },
+    {
+      "month": "Mar",
+      "revenue": 105000
+    },
+    {
+      "month": "Apr",
+      "revenue": 115000
+    },
+    {
+      "month": "May",
+      "revenue": 125000
+    },
+    {
+      "month": "Jun",
+      "revenue": 135000
+    }
+  ],
+  "ordersByStatus": [
+    {
+      "status": "Completed",
+      "count": 6200
+    },
+    {
+      "status": "Pending",
+      "count": 1400
+    },
+    {
+      "status": "Cancelled",
+      "count": 850
+    }
+  ]
+}

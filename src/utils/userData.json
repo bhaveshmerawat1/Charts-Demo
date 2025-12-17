@@ -1,0 +1,51 @@
+{
+  "summary": {
+    "totalUsers": 1250,
+    "activeUsers": 980,
+    "inactiveUsers": 270
+  },
+  "usersByRole": [
+    {
+      "role": "Admin",
+      "count": 45,
+      "usersByStatus": {
+        "active": 40,
+        "inactive": 5
+      }
+    },
+    {
+      "role": "Manager",
+      "count": 155,
+      "usersByStatus": {
+        "active": 120,
+        "inactive": 35
+      }
+    },
+    {
+      "role": "Customer",
+      "count": 1050,
+      "usersByStatus": {
+        "active": 820,
+        "inactive": 230
+      }
+    }
+  ],
+  "usersByRegion": [
+    {
+      "region": "North America",
+      "users": 420
+    },
+    {
+      "region": "Europe",
+      "users": 310
+    },
+    {
+      "region": "Asia",
+      "users": 390
+    },
+    {
+      "region": "Others",
+      "users": 130
+    }
+  ]
+}
