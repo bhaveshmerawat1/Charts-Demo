@@ -290,14 +290,7 @@ export function Chart({
                 restore: {
                     show: true,
                     title: "Restore",
-                },
-                dataZoom: {
-                    show: true,
-                    title: {
-                        zoom: "Zoom",
-                        back: "Back",
-                    },
-                },
+                }
             },
             right: 10,
             top: 10,
@@ -410,9 +403,6 @@ export function Chart({
 
     const headerClass = headerAlign === "center" ? "text-center" : "text-left";
 
-    const formats = exportOptions.formats || ["png", "jpg"];
-    const showCustomExport = exportOptions.enabled && exportOptions.showCustomButtons !== false;
-
     return (
         <div className={clsx(baseCard, variantClass, className)}>
             {showHeader && (title || subtitle) && (
@@ -422,46 +412,7 @@ export function Chart({
                             {title && <h3 className={clsx("text-lg font-medium text-gray-800", titleClassName)}>{title}</h3>}
                             {subtitle && <p className={clsx("text-sm text-gray-500 mt-1", subtitleClassName)}>{subtitle}</p>}
                         </div>
-                        {showCustomExport && (
-                            <div className="flex items-center gap-2 ml-4">
-                                {formats.includes("png") && (
-                                    <button
-                                        onClick={() => handleExport("png")}
-                                        className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-colors"
-                                        title="Export as PNG"
-                                    >
-                                        <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        PNG
-                                    </button>
-                                )}
-                                {formats.includes("jpg") && (
-                                    <button
-                                        onClick={() => handleExport("jpg")}
-                                        className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-colors"
-                                        title="Export as JPG"
-                                    >
-                                        <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        JPG
-                                    </button>
-                                )}
-                                {formats.includes("svg") && (
-                                    <button
-                                        onClick={() => handleExport("svg")}
-                                        className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 hover:border-gray-400 transition-colors"
-                                        title="Export as SVG"
-                                    >
-                                        <svg className="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                        </svg>
-                                        SVG
-                                    </button>
-                                )}
-                            </div>
-                        )}
+                
                     </div>
 
                     {enableDrillDown && drillDownLevel.length > 0 && (
