@@ -9,9 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@highcharts/dashboards": "^4.0.0",
+    "@highcharts/grid-lite": "^2.1.1",
     "clsx": "^2.1.1",
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.5",
+    "highcharts": "^11.4.8",
+    "highcharts-react-official": "^3.2.3",
     "next": "16.0.10",
     "react": "19.2.1",
     "react-dom": "19.2.1"
