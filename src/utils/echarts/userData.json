@@ -1,0 +1,89 @@
+{
+  "totalUsers": 12847,
+  "activeUsers": 9234,
+  "newUsersThisMonth": 1456,
+  "userGrowthRate": 12.3,
+  "usersByRole": [
+    {
+      "role": "Admin",
+      "count": 145
+    },
+    {
+      "role": "Manager",
+      "count": 892
+    },
+    {
+      "role": "Editor",
+      "count": 3420
+    },
+    {
+      "role": "Contributor",
+      "count": 4567
+    },
+    {
+      "role": "Viewer",
+      "count": 3823
+    }
+  ],
+  "usersByRegion": [
+    {
+      "region": "North America",
+      "users": 4850,
+      "growth": 8.5
+    },
+    {
+      "region": "Europe",
+      "users": 3780,
+      "growth": 12.3
+    },
+    {
+      "region": "Asia Pacific",
+      "users": 2920,
+      "growth": 18.7
+    },
+    {
+      "region": "Latin America",
+      "users": 890,
+      "growth": 15.2
+    },
+    {
+      "region": "Middle East",
+      "users": 407,
+      "growth": 22.1
+    }
+  ],
+  "userActivityByHour": [
+    {
+      "hour": "00:00",
+      "active": 234
+    },
+    {
+      "hour": "03:00",
+      "active": 156
+    },
+    {
+      "hour": "06:00",
+      "active": 445
+    },
+    {
+      "hour": "09:00",
+      "active": 2340
+    },
+    {
+      "hour": "12:00",
+      "active": 3456
+    },
+    {
+      "hour": "15:00",
+      "active": 3892
+    },
+    {
+      "hour": "18:00",
+      "active": 2567
+    },
+    {
+      "hour": "21:00",
+      "active": 1234
+    }
+  ]
+}

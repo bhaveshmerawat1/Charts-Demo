@@ -1,0 +1,273 @@
+{
+  "totalRevenue": 8456789,
+  "revenueGrowth": 15.8,
+  "totalOrders": 24567,
+  "avgOrderValue": 344,
+  "conversionRate": 3.4,
+  "salesByCategory": [
+    {
+      "category": "Electronics",
+      "revenue": 2856000,
+      "orders": 6780,
+      "growth": 18.5,
+      "products": [
+        {
+          "name": "Smartphones",
+          "revenue": 1200000,
+          "orders": 2400,
+          "margin": 22.5
+        },
+        {
+          "name": "Laptops",
+          "revenue": 980000,
+          "orders": 1960,
+          "margin": 18.3
+        },
+        {
+          "name": "Tablets",
+          "revenue": 456000,
+          "orders": 1520,
+          "margin": 20.1
+        },
+        {
+          "name": "Accessories",
+          "revenue": 220000,
+          "orders": 900,
+          "margin": 35.2
+        }
+      ]
+    },
+    {
+      "category": "Clothing",
+      "revenue": 2145000,
+      "orders": 8920,
+      "growth": 12.3,
+      "products": [
+        {
+          "name": "Men's Wear",
+          "revenue": 890000,
+          "orders": 3560,
+          "margin": 42.5
+        },
+        {
+          "name": "Women's Wear",
+          "revenue": 945000,
+          "orders": 3780,
+          "margin": 45.3
+        },
+        {
+          "name": "Kids",
+          "revenue": 210000,
+          "orders": 1050,
+          "margin": 38.7
+        },
+        {
+          "name": "Accessories",
+          "revenue": 100000,
+          "orders": 530,
+          "margin": 52.1
+        }
+      ]
+    },
+    {
+      "category": "Home & Garden",
+      "revenue": 1823000,
+      "orders": 4567,
+      "growth": 22.1,
+      "products": [
+        {
+          "name": "Furniture",
+          "revenue": 980000,
+          "orders": 1960,
+          "margin": 28.5
+        },
+        {
+          "name": "Decor",
+          "revenue": 543000,
+          "orders": 1810,
+          "margin": 35.3
+        },
+        {
+          "name": "Kitchen",
+          "revenue": 200000,
+          "orders": 667,
+          "margin": 30.2
+        },
+        {
+          "name": "Garden Tools",
+          "revenue": 100000,
+          "orders": 130,
+          "margin": 25.8
+        }
+      ]
+    },
+    {
+      "category": "Sports & Outdoors",
+      "revenue": 1632789,
+      "orders": 4300,
+      "growth": 8.9,
+      "products": [
+        {
+          "name": "Fitness Equipment",
+          "revenue": 720000,
+          "orders": 1800,
+          "margin": 32.5
+        },
+        {
+          "name": "Sports Apparel",
+          "revenue": 512000,
+          "orders": 1540,
+          "margin": 38.9
+        },
+        {
+          "name": "Outdoor Gear",
+          "revenue": 300789,
+          "orders": 780,
+          "margin": 28.3
+        },
+        {
+          "name": "Accessories",
+          "revenue": 100000,
+          "orders": 180,
+          "margin": 45.2
+        }
+      ]
+    }
+  ],
+  "monthlySales": [
+    {
+      "month": "Jan",
+      "revenue": 580000,
+      "orders": 1890,
+      "target": 550000
+    },
+    {
+      "month": "Feb",
+      "revenue": 620000,
+      "orders": 2010,
+      "target": 600000
+    },
+    {
+      "month": "Mar",
+      "revenue": 710000,
+      "orders": 2340,
+      "target": 650000
+    },
+    {
+      "month": "Apr",
+      "revenue": 685000,
+      "orders": 2205,
+      "target": 670000
+    },
+    {
+      "month": "May",
+      "revenue": 755000,
+      "orders": 2450,
+      "target": 720000
+    },
+    {
+      "month": "Jun",
+      "revenue": 820000,
+      "orders": 2680,
+      "target": 780000
+    },
+    {
+      "month": "Jul",
+      "revenue": 890000,
+      "orders": 2910,
+      "target": 850000
+    },
+    {
+      "month": "Aug",
+      "revenue": 845000,
+      "orders": 2745,
+      "target": 820000
+    },
+    {
+      "month": "Sep",
+      "revenue": 920000,
+      "orders": 3020,
+      "target": 880000
+    },
+    {
+      "month": "Oct",
+      "revenue": 980000,
+      "orders": 3210,
+      "target": 940000
+    },
+    {
+      "month": "Nov",
+      "revenue": 1050000,
+      "orders": 3450,
+      "target": 1020000
+    },
+    {
+      "month": "Dec",
+      "revenue": 1101789,
+      "orders": 3657,
+      "target": 1080000
+    }
+  ],
+  "ordersByStatus": [
+    {
+      "status": "Completed",
+      "count": 19450,
+      "percentage": 79.2
+    },
+    {
+      "status": "Processing",
+      "count": 3250,
+      "percentage": 13.2
+    },
+    {
+      "status": "Pending",
+      "count": 1450,
+      "percentage": 5.9
+    },
+    {
+      "status": "Cancelled",
+      "count": 417,
+      "percentage": 1.7
+    }
+  ],
+  "revenueByChannel": [
+    {
+      "channel": "Direct",
+      "revenue": 3382716,
+      "orders": 9827
+    },
+    {
+      "channel": "Organic Search",
+      "revenue": 2537037,
+      "orders": 7370
+    },
+    {
+      "channel": "Paid Search",
+      "revenue": 1691358,
+      "orders": 4913
+    },
+    {
+      "channel": "Social Media",
+      "revenue": 845679,
+      "orders": 2457
+    }
+  ],
+  "revenueVsOrders": [
+    { "name": "Direct", "revenue": 3382716, "orders": 9827 },
+    { "name": "Organic Search", "revenue": 2537037, "orders": 7370 },
+    { "name": "Paid Search", "revenue": 1691358, "orders": 4913 },
+    { "name": "Social Media", "revenue": 845679, "orders": 2457 },
+    { "name": "Electronics", "revenue": 2856000, "orders": 6780 },
+    { "name": "Clothing", "revenue": 2145000, "orders": 8920 },
+    { "name": "Home & Garden", "revenue": 1823000, "orders": 4567 },
+    { "name": "Sports & Outdoors", "revenue": 1632789, "orders": 4300 }
+  ],
+  "performanceMetrics": [
+    { "name": "Revenue", "value": 85 },
+    { "name": "Orders", "value": 78 },
+    { "name": "Conversion", "value": 92 },
+    { "name": "Customer Satisfaction", "value": 88 },
+    { "name": "Growth Rate", "value": 75 },
+    { "name": "Market Share", "value": 82 }
+  ]
+}

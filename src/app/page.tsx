@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 export default function Home() {
   const router = useRouter();
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black bg-white" >
-      <main className="flex w-full max-w-4xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <div className="flex h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black bg-white" >
+      <main className="flex w-full h-full max-w-4xl flex-col items-center justify-between py-20 px-16 bg-white dark:bg-black sm:items-start">
         <h1 className="text-5xl font-bold text-zinc-900 dark:text-zinc-100 sm:text-6xl">
           Welcome to <span className="text-blue-600">Chart App!</span>
         </h1>
