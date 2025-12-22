@@ -3,10 +3,10 @@
 import React from "react";
 import userData from "@/utils/echarts/userData.json";
 import dashboardData from "@/utils/echarts/dashboardData.json";
-import { KPICard } from "@/components/echarts/KPICard";
-import { Chart } from "@/components/echarts/Chart";
-import type { DrillDownData } from "@/components/echarts/Chart";
-import { transformScatterData } from "@/utils/echarts/dataTransformers";
+import { KPICard } from "@/components/Charts/echarts/KPICard";
+import { Chart } from "@/components/Charts/echarts/Chart";
+import type { DrillDownData } from "@/components/Charts/echarts/Chart";
+import { transformScatterData } from "@/components/Charts/echarts/dataTransformers";
 
 interface KPICardProps {
   label: string;
@@ -94,6 +94,13 @@ export default function DashboardPage() {
             series={[{ type: "bar", dataKey: "count", name: "Users" }]}
             chartHeight={400}
             colors={["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"]}
+            exportOptions={{
+              enabled: true,
+              showToolbox: true,
+              showCustomButtons: true,
+              formats: ["png", "jpg", "svg"],
+              fileName: "user-distribution-by-role",
+            }}
           />
 
           {/* 2. Pie Chart: Users by Region */}
@@ -107,6 +114,13 @@ export default function DashboardPage() {
             series={[{ type: "pie", name: "Users" }]}
             chartHeight={400}
             colors={["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"]}
+            exportOptions={{
+              enabled: true,
+              showToolbox: true,
+              showCustomButtons: true,
+              formats: ["png", "jpg"],
+              fileName: "global-user-distribution",
+            }}
           />
         </div>
 
@@ -122,6 +136,13 @@ export default function DashboardPage() {
           ]}
           chartHeight={350}
           colors={["#3b82f6"]}
+          exportOptions={{
+            enabled: true,
+            showToolbox: true,
+            showCustomButtons: true,
+            formats: ["png", "svg"],
+            fileName: "user-activity-by-hour",
+          }}
         />
 
         {/* SALES SECTION */}
@@ -142,6 +163,13 @@ export default function DashboardPage() {
             enableDrillDown={true}
             drillDownData={drillDownData}
             colors={["#8b5cf6"]}
+            exportOptions={{
+              enabled: true,
+              showToolbox: false,
+              showCustomButtons: true,
+              formats: ["png", "jpg"],
+              fileName: "revenue-by-category",
+            }}
           />
 
           {/* 5. Scatter Chart: Revenue vs Orders */}
@@ -221,6 +249,14 @@ export default function DashboardPage() {
           ]}
           chartHeight={400}
           colors={["#3b82f6", "#f59e0b"]}
+          exportOptions={{
+            enabled: true,
+            showToolbox: true,
+            showCustomButtons: true,
+            formats: ["png", "jpg", "svg"],
+            fileName: "revenue-vs-target-trend",
+            pixelRatio: 2,
+          }}
         />
 
         {/* PERFORMANCE METRICS */}
@@ -239,6 +275,13 @@ export default function DashboardPage() {
             series={[{ type: "pie", name: "Orders" }]}
             chartHeight={400}
             colors={["#10b981", "#3b82f6", "#f59e0b", "#ef4444"]}
+            exportOptions={{
+              enabled: true,
+              showToolbox: true,
+              showCustomButtons: true,
+              formats: ["png", "jpg"],
+              fileName: "order-status-distribution",
+            }}
           />
 
           {/* Bar: Revenue Channels */}
