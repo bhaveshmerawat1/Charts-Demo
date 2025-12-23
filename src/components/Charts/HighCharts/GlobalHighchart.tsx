@@ -56,9 +56,7 @@ export default function GlobalHighchart({
 
     series, // Data series
 
-    drilldown: drilldownSeries  // Include drilldown configuration
-      ? { series: drilldownSeries }
-      : undefined, // Drilldown series if provided
+    drilldown: { series: drilldownSeries }, // Ensure drilldown object exists even if series is undefined
 
     accessibility: { // Accessibility settings
       enabled: true,

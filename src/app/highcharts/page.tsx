@@ -6,6 +6,7 @@ import { registryData, drilldownSeriesData } from "@/components/Charts/HighChart
 import { CHART_TYPES, ChartType } from "@/components/Charts/HighCharts/types";
 import userData from "../../utils/userData.json"
 import Button from "@/components/Button/Button";
+import MultiChart from "@/components/Charts/HighCharts/MultiChart/MultiChart";
 type FilterType = "role" | "region";
 
 export default function HighCharts() {
@@ -144,6 +145,9 @@ export default function HighCharts() {
             series={chartOptions.series.map((s: any) => ({ ...s, type: "column" }))}
             drilldownSeries={[]}
           />
+        </div>
+        <div className="mt-3">
+          <MultiChart />
         </div>
       </div>
 

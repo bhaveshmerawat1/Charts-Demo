@@ -3,7 +3,7 @@ import { ChartType } from "./types";
 export const registryData = {
   usersByRole: {
     type: "column" as ChartType,
-    title: "Users by Role",
+    title: "Users",
     yAxisTitle: "Users"
   },
   usersByRegion: {
