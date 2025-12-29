@@ -5,19 +5,15 @@ import userData from "@/utils/echarts/userData.json";
 import dashboardData from "@/utils/echarts/dashboardData.json";
 import { KPICard } from "@/components/Charts/echarts/KPICard";
 import { Chart } from "@/components/Charts/echarts/Chart";
-import type { DrillDownData } from "@/components/Charts/echarts/Chart";
+import { DashboardHeader } from "@/components/Charts/echarts/DashboardHeader";
+import { TimeFilter, type TimeFilterValue } from "@/components/Charts/echarts/TimeFilter";
 import { transformScatterData } from "@/components/Charts/echarts/dataTransformers";
-
-interface KPICardProps {
-  label: string;
-  value: string;
-  change: string;
-  trend: "up" | "down";
-}
+import { prepareKPICards } from "@/utils/echarts/kpiUtils";
+import { prepareDrillDownData, CATEGORY_COLORS } from "@/utils/echarts/drillDownUtils";
 
 export default function DashboardPage() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [timeFilter, setTimeFilter] = useState<"all" | "last3" | "last6" | "last12">("all");
+  const [timeFilter, setTimeFilter] = useState<TimeFilterValue>("all");
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
@@ -37,81 +33,10 @@ export default function DashboardPage() {
   const filteredMonthlySales = filterMonthlySales(dashboardData.monthlySales);
 
   /* ---------------- KPI Cards ---------------- */
-  // Format numbers for display
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat('en-US').format(value);
-  };
-
-  const kpiCards: (KPICardProps & { variant?: "primary" | "default"; icon?: "doctor" | "nurse" | "staff" | "patients" })[] = [
-    {
-      label: "Total Revenue",
-      value: formatCurrency(dashboardData.totalRevenue),
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
-      variant: "primary",
-      icon: "doctor",
-    },
-    {
-      label: "Total Orders",
-      value: formatNumber(dashboardData.totalOrders),
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
-      variant: "default",
-      icon: "nurse",
-    },
-    {
-      label: "Average Order Value",
-      value: formatCurrency(dashboardData.avgOrderValue),
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
-      variant: "default",
-      icon: "staff",
-    },
-    {
-      label: "Conversion Rate",
-      value: `${dashboardData.conversionRate}%`,
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
-      variant: "default",
-      icon: "patients",
-    },
-  ];
+  const kpiCards = prepareKPICards();
 
   /* ---------------- Drill-down Data Preparation ---------------- */
-  // Define colors for categories - each category will get a unique color
-  const categoryColors = ["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#ef4444", "#6366f1", "#14b8a6"];
-  
-  // Create a color mapping for categories
-  const categoryColorMap: Record<string, string> = {};
-  dashboardData.salesByCategory.forEach((category, index) => {
-    categoryColorMap[category.category] = categoryColors[index % categoryColors.length];
-  });
-
-  const drillDownData: Record<string, DrillDownData> = {};
-  dashboardData.salesByCategory.forEach((category) => {
-    const categoryColor = categoryColorMap[category.category];
-    // Add color property to each product to match parent category color
-    const productsWithColor = category.products.map((product) => ({
-      ...product,
-      color: categoryColor,
-    }));
-    
-    drillDownData[category.category] = {
-      name: category.category,
-      data: productsWithColor,
-      xKey: "name",
-      series: [{ type: "bar", dataKey: "revenue", name: "Revenue" }],
-    };
-  });
+  const drillDownData = prepareDrillDownData();
 
   /* ---------------- Data Transformations ---------------- */
   // Transform revenueVsOrders from API format to chart format
@@ -132,64 +57,12 @@ export default function DashboardPage() {
     <div className={`min-h-screen ${bgGradient} py-8 px-4 transition-colors duration-200`}>
       <div className="max-w-7xl mx-auto">
         {/* Header with Theme Toggle */}
-        <div className="mb-8 relative">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className={`text-5xl font-light ${textColor}`}>Analytics Dashboard</h1>
-              <p className={textSecondaryColor}>
-                Comprehensive business intelligence and performance metrics
-              </p>
-            </div>
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors duration-200 ${
-                isDark
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600"
-                  : "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm"
-              }`}
-              aria-label="Toggle theme"
-            >
-              {isDark ? (
-                <>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">Light</span>
-                </>
-              ) : (
-                <>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium">Dark</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        <DashboardHeader
+          theme={theme}
+          onThemeToggle={toggleTheme}
+          title="Analytics Dashboard"
+          subtitle="Comprehensive business intelligence and performance metrics"
+        />
 
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -276,13 +149,13 @@ export default function DashboardPage() {
             cardVariant="bordered"
             data={dashboardData.salesByCategory.map((category, index) => ({
               ...category,
-              color: categoryColors[index % categoryColors.length],
+              color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
             }))}
             xKey="category"
             series={[{ type: "bar", dataKey: "revenue", name: "Revenue" }]}
             enableDrillDown={true}
             drillDownData={drillDownData}
-            colors={categoryColors}
+            colors={CATEGORY_COLORS}
             overrideOption={{
               xAxis: {
                 axisLabel: {
@@ -709,31 +582,11 @@ export default function DashboardPage() {
         {/* 12. Stacked Bar Chart (Different Layout) */}
         <div className="mb-8">
           {/* Time Duration Filter Dropdown */}
-          <div className="mb-4 flex items-center justify-end">
-            <label
-              htmlFor="time-filter"
-              className={`mr-3 text-sm font-medium ${
-                theme === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Time Duration:
-            </label>
-            <select
-              id="time-filter"
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value as "all" | "last3" | "last6" | "last12")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 outline-none cursor-pointer ${
-                theme === "dark"
-                  ? "bg-gray-700 text-gray-200 border border-gray-600 hover:bg-gray-600"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm"
-              }`}
-            >
-              <option value="all">All Time</option>
-              <option value="last3">Last 3 Months</option>
-              <option value="last6">Last 6 Months</option>
-              <option value="last12">Last Year</option>
-            </select>
-          </div>
+          <TimeFilter
+            value={timeFilter}
+            onChange={setTimeFilter}
+            theme={theme}
+          />
 
           <Chart
             title="Monthly Revenue & Orders (Stacked)"
