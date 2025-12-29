@@ -5,6 +5,7 @@ import React, { useRef, useEffect, useState } from "react";
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption, SeriesOption } from "echarts";
 import clsx from "clsx";
+import { exportToPDF, exportToCSV, exportToExcel, getChartDataAsTable, type ChartDataContext } from "./exportUtils";
 
 export interface ChartSeries {
     type: "bar" | "line" | "pie" | "scatter" | "radar" | "funnel" | "gauge" | "heatmap";
@@ -33,11 +34,18 @@ export interface DrillDownData {
 
 export interface ExportOptions {
     enabled?: boolean;
-    showToolbox?: boolean;
-    showCustomButtons?: boolean;
-    formats?: ("png" | "jpg" | "svg")[];
+    formats?: ("png" | "jpg" | "svg" | "pdf" | "csv" | "xlsx")[];
     fileName?: string;
     pixelRatio?: number;
+    pdfOptions?: {
+        pageSize?: "a4" | "letter";
+        orientation?: "portrait" | "landscape";
+        margin?: number;
+    };
+    csvOptions?: {
+        includeHeaders?: boolean;
+        delimiter?: string;
+    };
 }
 
 export interface ChartProps {
@@ -74,6 +82,25 @@ export interface ChartProps {
     enableDrillDown?: boolean;
 
     exportOptions?: ExportOptions;
+    theme?: "light" | "dark";
+    showLabels?: boolean;
+    showLegend?: boolean;
+    legendPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
+    legendOrientation?: "horizontal" | "vertical";
+    legendConfig?: any;
+}
+
+// Generate random colors for pie charts
+function generateRandomColors(count: number): string[] {
+    const colors: string[] = [];
+    for (let i = 0; i < count; i++) {
+        // Generate vibrant, distinct colors
+        const hue = (i * 137.508) % 360; // Golden angle for better distribution
+        const saturation = 60 + (i % 3) * 10; // 60-80%
+        const lightness = 50 + (i % 2) * 10; // 50-60%
+        colors.push(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
+    }
+    return colors;
 }
 
 export function Chart({
@@ -101,6 +128,12 @@ export function Chart({
     drillDownData,
     enableDrillDown = false,
     exportOptions = { enabled: false },
+    theme = "light",
+    showLabels,
+    showLegend,
+    legendPosition = "top-right",
+    legendOrientation = "vertical",
+    legendConfig,
 }: ChartProps) {
     const chartRef = useRef<ReactECharts>(null);
 
@@ -108,6 +141,7 @@ export function Chart({
     const [currentData, setCurrentData] = useState(data);
     const [currentSeries, setCurrentSeries] = useState(series);
     const [currentXKey, setCurrentXKey] = useState(xKey);
+    const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
 
     useEffect(() => {
         setCurrentData(data);
@@ -130,13 +164,43 @@ export function Chart({
         return undefined;
     };
 
+    // Generate random colors for pie charts if colors not provided
+    const isPieChart = currentSeries.some((s) => ["pie", "funnel", "gauge"].includes(s.type));
+    const finalColors = colors && colors.length > 0
+        ? colors
+        : isPieChart
+            ? generateRandomColors(currentData.length)
+            : colors;
+
     const builtSeries: SeriesOption[] = currentSeries.map((s, index) => {
-        const color = colors?.[index % (colors?.length || 1)];
+        const color = finalColors?.[index % (finalColors?.length || 1)];
 
         switch (s.type) {
             case "pie":
             case "funnel":
             case "gauge":
+                const isPieType = ["pie", "funnel", "gauge"].includes(s.type);
+                // Determine if labels should be shown
+                // Priority: showLabels prop > extra.label.show > default (false)
+                const shouldShowLabels = showLabels !== undefined 
+                    ? showLabels 
+                    : (s.extra as any)?.label?.show !== undefined 
+                        ? (s.extra as any).label.show 
+                        : false; // Default to false for pie charts
+                
+                // Build label configuration
+                const labelConfig = shouldShowLabels
+                    ? ((s.extra as any)?.label || { show: true })
+                    : { show: false };
+                
+                // Build labelLine configuration
+                const labelLineConfig = shouldShowLabels
+                    ? ((s.extra as any)?.labelLine || { show: true })
+                    : { show: false };
+                
+                // Extract extra props but exclude label and labelLine to avoid overriding our settings
+                const { label: extraLabel, labelLine: extraLabelLine, ...restExtra } = (s.extra as any) || {};
+                
                 return {
                     type: s.type,
                     name: s.name,
@@ -145,8 +209,10 @@ export function Chart({
                         name: s.nameAccessor?.(d) || getValue(d, undefined, nameKey) || "",
                         value: s.valueAccessor?.(d) || getValue(d, undefined, valueKey) || 0,
                     })),
-                    itemStyle: color ? { color } : undefined,
-                    ...s.extra,
+                    label: labelConfig,
+                    labelLine: labelLineConfig,
+                    // Don't set itemStyle.color here - let ECharts use the color array from baseOption
+                    ...restExtra,
                 } as SeriesOption;
 
             case "radar":
@@ -182,16 +248,37 @@ export function Chart({
                 } as SeriesOption;
 
             default:
+                // Check if any data item has a color property for per-item coloring
+                const hasItemColors = currentData.some((d) => d.color !== undefined);
+                
+                // Build data array as simple values
+                const seriesData = currentData.map((d, idx) => {
+                    if (s.dataAccessor) return s.dataAccessor(d, idx);
+                    if (s.dataKey) return getValue(d, undefined, s.dataKey);
+                    return d[s.dataKey!] || 0;
+                });
+
+                // For bar charts with per-item colors, use itemStyle.color as a function
+                // that looks up the color from the original data item based on dataIndex
+                let itemStyleConfig: any = undefined;
+                if (s.type === "bar" && hasItemColors) {
+                    itemStyleConfig = {
+                        color: (params: any) => {
+                            const dataIndex = params.dataIndex;
+                            const originalItem = currentData[dataIndex];
+                            return originalItem?.color || color || finalColors?.[index % (finalColors?.length || 1)];
+                        }
+                    };
+                } else if (color) {
+                    itemStyleConfig = { color };
+                }
+
                 return {
                     type: s.type,
                     name: s.name,
                     smooth: s.smooth ?? s.type === "line",
-                    data: currentData.map((d, idx) => {
-                        if (s.dataAccessor) return s.dataAccessor(d, idx);
-                        if (s.dataKey) return getValue(d, undefined, s.dataKey);
-                        return d[s.dataKey!] || 0;
-                    }),
-                    itemStyle: color ? { color } : undefined,
+                    data: seriesData,
+                    itemStyle: itemStyleConfig,
                     areaStyle: s.area ? { opacity: 0.25, color } : undefined,
                     stack: s.stack,
                     ...s.extra,
@@ -199,20 +286,45 @@ export function Chart({
         }
     });
 
+    const isDark = theme === "dark";
+    const textColor = isDark ? "#e5e7eb" : "#111827";
+    const backgroundColor = isDark ? "#1f2937" : "#ffffff";
+    const gridColor = isDark ? "#374151" : "#e5e7eb";
+    const axisLabelColor = isDark ? "#9ca3af" : "#6b7280";
+
     const baseOption: EChartsOption = {
+        backgroundColor: backgroundColor,
         title:
             title && !showHeader
-                ? { text: title, textStyle: { fontSize: 16, fontWeight: 500 } }
+                ? {
+                    text: title,
+                    textStyle: {
+                        fontSize: 16,
+                        fontWeight: 500,
+                        color: textColor
+                    }
+                }
                 : undefined,
 
-        color: colors,
+        color: finalColors,
 
         tooltip: {
             trigger: currentSeries.some((s) => ["pie", "funnel", "gauge"].includes(s.type)) ? "item" : "axis",
             axisPointer: { type: "cross" },
+            backgroundColor: isDark ? "#374151" : "#ffffff",
+            borderColor: isDark ? "#4b5563" : "#e5e7eb",
+            textStyle: {
+                color: textColor,
+            },
         },
 
-        grid: { left: "3%", right: "4%", bottom: "3%", containLabel: true },
+        grid: {
+            left: "3%",
+            right: "4%",
+            bottom: "3%",
+            containLabel: true,
+            borderColor: gridColor,
+        },
 
         xAxis:
             currentSeries.some((s) => ["line", "bar", "scatter"].includes(s.type)) && currentData.length
@@ -222,10 +334,39 @@ export function Chart({
                         currentSeries.some((s) => s.type === "scatter")
                             ? undefined
                             : currentData.map((d) => getValue(d, undefined, currentXKey)),
+                    axisLine: {
+                        lineStyle: {
+                            color: gridColor,
+                        },
+                    },
+                    axisLabel: {
+                        color: axisLabelColor,
+                    },
+                    splitLine: {
+                        show: false,
+                    },
                 }
                 : undefined,
 
-        yAxis: currentSeries.some((s) => ["line", "bar", "scatter"].includes(s.type)) ? { type: "value" } : undefined,
+        yAxis: currentSeries.some((s) => ["line", "bar", "scatter"].includes(s.type))
+            ? {
+                type: "value",
+                axisLine: {
+                    lineStyle: {
+                        color: gridColor,
+                    },
+                },
+                axisLabel: {
+                    color: axisLabelColor,
+                },
+                splitLine: {
+                    lineStyle: {
+                        color: gridColor,
+                        type: "dashed",
+                    },
+                },
+            }
+            : undefined,
 
         radar: currentSeries.some((s) => s.type === "radar")
             ? (() => {
@@ -241,69 +382,165 @@ export function Chart({
                         name: getValue(d, undefined, nameKey),
                         max: normalizedMax,
                     })),
+                    axisName: {
+                        color: axisLabelColor,
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: gridColor,
+                        },
+                    },
+                    splitArea: {
+                        areaStyle: {
+                            color: isDark ? ["rgba(255, 255, 255, 0.05)", "rgba(255, 255, 255, 0.02)"] : ["rgba(0, 0, 0, 0.05)", "rgba(0, 0, 0, 0.02)"],
+                        },
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: gridColor,
+                        },
+                    },
                 };
             })()
             : undefined,
+
+        legend: (() => {
+            const isPieChart = currentSeries.some((s) => ["pie", "funnel", "gauge"].includes(s.type));
+            const shouldShowLegend = showLegend !== undefined 
+                ? showLegend 
+                : isPieChart; // Default to true for pie charts
+            
+            if (!shouldShowLegend) {
+                return undefined;
+            }
+
+            // Calculate position based on legendPosition
+            const positionConfig: any = {};
+            switch (legendPosition) {
+                case "top-right":
+                    positionConfig.right = "5%";
+                    positionConfig.top = "10%";
+                    break;
+                case "top-left":
+                    positionConfig.left = "5%";
+                    positionConfig.top = "10%";
+                    break;
+                case "bottom-right":
+                    positionConfig.right = "5%";
+                    positionConfig.bottom = "10%";
+                    break;
+                case "bottom-left":
+                    positionConfig.left = "5%";
+                    positionConfig.bottom = "10%";
+                    break;
+            }
+
+            const baseLegendConfig = {
+                show: true,
+                orient: legendOrientation,
+                ...positionConfig,
+                textStyle: {
+                    color: textColor,
+                },
+                itemGap: 10,
+                itemWidth: 14,
+                itemHeight: 14,
+            };
+
+            // Merge with custom legendConfig if provided
+            return legendConfig 
+                ? { ...baseLegendConfig, ...legendConfig }
+                : baseLegendConfig;
+        })(),
 
         series: builtSeries,
     };
 
     // Export functionality
-    const handleExport = (format: "png" | "jpg" | "svg" = "png") => {
+    const handleExport = async (format: "png" | "jpg" | "svg" | "pdf" | "csv" | "xlsx" = "png") => {
         const chartInstance = chartRef.current?.getEchartsInstance();
         if (!chartInstance) return;
 
         const fileName = exportOptions.fileName || title || "chart";
         const pixelRatio = exportOptions.pixelRatio || 2;
 
-        const url = chartInstance.getDataURL({
-            type: format,
-            pixelRatio,
-            backgroundColor: "#fff",
-        });
+        // Handle image formats (png, jpg, svg)
+        if (format === "png" || format === "jpg" || format === "svg") {
+            // ECharts uses "jpeg" instead of "jpg"
+            const echartsFormat = format === "jpg" ? "jpeg" : format;
+            const url = chartInstance.getDataURL({
+                type: echartsFormat as "png" | "jpeg" | "svg",
+                pixelRatio,
+                backgroundColor: isDark ? "#1f2937" : "#fff",
+            });
 
-        const link = document.createElement("a");
-        link.download = `${fileName}.${format}`;
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    // Toolbox configuration for export
-    const toolboxConfig = exportOptions.enabled && exportOptions.showToolbox
-        ? {
-            show: true,
-            feature: {
-                saveAsImage: {
-                    show: true,
-                    title: "Save as Image",
-                    type: "png",
-                    pixelRatio: exportOptions.pixelRatio || 2,
-                    name: exportOptions.fileName || title || "chart",
-                },
-                dataView: {
-                    show: true,
-                    title: "Data View",
-                    readOnly: false,
-                },
-                restore: {
-                    show: true,
-                    title: "Restore",
-                }
-            },
-            right: 10,
-            top: 10,
-            iconStyle: {
-                borderColor: "#666",
-            },
-            emphasis: {
-                iconStyle: {
-                    borderColor: "#333",
-                },
-            },
+            const link = document.createElement("a");
+            link.download = `${fileName}.${format}`;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            return;
         }
-        : undefined;
+
+        // Handle PDF export
+        if (format === "pdf") {
+            try {
+                const chartImageUrl = chartInstance.getDataURL({
+                    type: "png",
+                    pixelRatio,
+                    backgroundColor: isDark ? "#1f2937" : "#fff",
+                });
+
+                const chartDataContext: ChartDataContext = {
+                    data: currentData,
+                    series: currentSeries,
+                    xKey: currentXKey,
+                    nameKey,
+                    valueKey,
+                    title,
+                };
+
+                const tableData = getChartDataAsTable(chartDataContext);
+                await exportToPDF(chartImageUrl, tableData, fileName, title, exportOptions.pdfOptions);
+            } catch (error) {
+                console.error("Error exporting to PDF:", error);
+            }
+            return;
+        }
+
+        // Handle CSV export
+        if (format === "csv") {
+            const chartDataContext: ChartDataContext = {
+                data: currentData,
+                series: currentSeries,
+                xKey: currentXKey,
+                nameKey,
+                valueKey,
+                title,
+            };
+
+            const tableData = getChartDataAsTable(chartDataContext);
+            exportToCSV(tableData, fileName);
+            return;
+        }
+
+        // Handle Excel export
+        if (format === "xlsx") {
+            const chartDataContext: ChartDataContext = {
+                data: currentData,
+                series: currentSeries,
+                xKey: currentXKey,
+                nameKey,
+                valueKey,
+                title,
+            };
+
+            const tableData = getChartDataAsTable(chartDataContext);
+            exportToExcel(tableData, fileName, title || "Chart Data");
+            return;
+        }
+    };
 
     const overrideSeriesArray = Array.isArray(overrideOption.series)
         ? overrideOption.series
@@ -319,11 +556,34 @@ export function Chart({
         }
         : overrideOption.radar || baseOption.radar;
 
+    const mergedXAxis = baseOption.xAxis && overrideOption.xAxis
+        ? (() => {
+            const baseXAxis = Array.isArray(baseOption.xAxis) ? baseOption.xAxis[0] : baseOption.xAxis;
+            const overrideXAxis = Array.isArray(overrideOption.xAxis) ? overrideOption.xAxis[0] : overrideOption.xAxis;
+            const baseXAxisAny = baseXAxis as any;
+            const overrideXAxisAny = overrideXAxis as any;
+            const merged: any = {
+                ...baseXAxis,
+                ...overrideXAxis,
+            };
+            // Preserve data from base if not provided in override
+            if (!overrideXAxisAny.data && baseXAxisAny.data) {
+                merged.data = baseXAxisAny.data;
+            }
+            // Preserve type from base if not provided in override
+            if (!overrideXAxisAny.type && baseXAxisAny.type) {
+                merged.type = baseXAxisAny.type;
+            }
+            return merged;
+        })()
+        : overrideOption.xAxis || baseOption.xAxis;
+
     const finalOption: EChartsOption = {
         ...baseOption,
         ...overrideOption,
-        toolbox: toolboxConfig || overrideOption.toolbox,
+        toolbox: overrideOption.toolbox,
         radar: mergedRadar,
+        xAxis: mergedXAxis,
         series: overrideSeriesArray
             ? builtSeries.map((baseSeries, index) => {
                 const overrideSeries = overrideSeriesArray[index];
@@ -394,39 +654,135 @@ export function Chart({
     const baseCard = "rounded-xl p-6 transition-shadow duration-200";
     const variantClass =
         cardVariant === "plain"
-            ? "bg-white"
+            ? isDark ? "bg-gray-800" : "bg-white"
             : cardVariant === "elevated"
-                ? "bg-white hover:shadow-xl"
+                ? isDark ? "bg-gray-800 shadow-lg hover:shadow-xl" : "bg-white shadow-lg hover:shadow-xl"
                 : cardVariant === "gradient"
-                    ? "bg-gradient-to-br from-white to-slate-50 shadow-lg"
-                    : "bg-white border border-slate-200 shadow-sm";
+                    ? isDark ? "bg-gradient-to-br from-gray-800 to-gray-900 shadow-lg hover:shadow-xl" : "bg-gradient-to-br from-white to-slate-50 shadow-lg hover:shadow-xl"
+                    : isDark ? "bg-gray-800 border border-gray-700" : "bg-white border border-slate-200";
 
     const headerClass = headerAlign === "center" ? "text-center" : "text-left";
+    const titleColorClass = isDark ? "text-gray-100" : "text-gray-800";
+    const subtitleColorClass = isDark ? "text-gray-400" : "text-gray-500";
+
+    // Get enabled export formats
+    const enabledFormats = exportOptions.formats || ["png", "jpg", "svg"];
+    const formatLabels: Record<string, string> = {
+        png: "PNG Image",
+        jpg: "JPG Image",
+        svg: "SVG Image",
+        pdf: "PDF Document",
+        csv: "CSV File",
+        xlsx: "Excel File",
+    };
 
     return (
         <div className={clsx(baseCard, variantClass, className)}>
             {showHeader && (title || subtitle) && (
-                <div className={clsx("mb-4", headerClass)}>
+                <div className={clsx("", headerClass)}>
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
-                            {title && <h3 className={clsx("text-lg font-medium text-gray-800", titleClassName)}>{title}</h3>}
-                            {subtitle && <p className={clsx("text-sm text-gray-500 mt-1", subtitleClassName)}>{subtitle}</p>}
+                            {title && <h3 className={clsx("text-lg font-sans font-medium", titleColorClass, titleClassName)}>{title}</h3>}
+                            {subtitle && <p className={clsx("text-sm font-sans", subtitleColorClass, subtitleClassName)}>{subtitle}</p>}
                         </div>
-                
+                        {exportOptions.enabled && enabledFormats.length > 0 && (
+                            <div className="relative ml-4">
+                                <button
+                                    onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                                    aria-label="More options"
+                                    className={clsx(
+                                        "p-2 rounded-full transition-colors",
+                                        isDark
+                                            ? "text-gray-300 hover:bg-gray-700"
+                                            : "text-gray-500 hover:bg-gray-200"
+                                    )}
+                                >
+                                    <svg
+                                        className="w-5 h-5"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                    >
+                                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4zm0 6a2 2 0 110-4 2 2 0 010 4z" />
+                                    </svg>
+                                </button>
+
+                                {exportDropdownOpen && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-10"
+                                            onClick={() => setExportDropdownOpen(false)}
+                                        />
+                                        <div className={clsx(
+                                            "absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-20 py-1",
+                                            isDark
+                                                ? "bg-gray-700 border border-gray-600"
+                                                : "bg-white border border-gray-200"
+                                        )}>
+                                            {enabledFormats.map((format) => (
+                                                <button
+                                                    key={format}
+                                                    onClick={() => {
+                                                        handleExport(format as any);
+                                                        setExportDropdownOpen(false);
+                                                    }}
+                                                    className={clsx(
+                                                        "w-full text-left px-4 py-2 text-sm transition-colors flex items-center gap-2",
+                                                        isDark
+                                                            ? "text-gray-200 hover:bg-gray-600"
+                                                            : "text-gray-700 hover:bg-gray-100"
+                                                    )}
+                                                >
+                                                    {format === "png" && (
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                                                        </svg>
+                                                    )}
+                                                    {format === "pdf" && (
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                                                        </svg>
+                                                    )}
+                                                    {(format === "csv" || format === "xlsx") && (
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                                                        </svg>
+                                                    )}
+                                                    {(format === "jpg" || format === "svg") && (
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                                                        </svg>
+                                                    )}
+                                                    <span>{formatLabels[format] || format.toUpperCase()}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {enableDrillDown && drillDownLevel.length > 0 && (
                         <div className="mt-2 flex items-center gap-2 text-sm">
-                            <button onClick={() => handleBreadcrumbClick(-1)} className="text-blue-600 hover:text-blue-800 font-medium">
+                            <button
+                                onClick={() => handleBreadcrumbClick(-1)}
+                                className={clsx(
+                                    "font-medium",
+                                    isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
+                                )}
+                            >
                                 All Categories
                             </button>
 
                             {drillDownLevel.map((level, index) => (
                                 <React.Fragment key={index}>
-                                    <span className="text-gray-400">/</span>
+                                    <span className={isDark ? "text-gray-500" : "text-gray-400"}>/</span>
                                     <button
                                         onClick={() => handleBreadcrumbClick(index)}
-                                        className="text-blue-600 hover:text-blue-800 font-medium"
+                                        className={clsx(
+                                            "font-medium",
+                                            isDark ? "text-blue-400 hover:text-blue-300" : "text-blue-600 hover:text-blue-800"
+                                        )}
                                     >
                                         {level}
                                     </button>
