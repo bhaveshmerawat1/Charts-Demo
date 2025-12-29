@@ -249,7 +249,7 @@ export function Chart({
     };
 
     // Export functionality
-    const handleExport = (format: "png" | "jpg" | "svg" = "png") => {
+    const handleExport = (format: "png" | "jpeg" | "svg" = "png") => {
         const chartInstance = chartRef.current?.getEchartsInstance();
         if (!chartInstance) return;
 
@@ -263,7 +263,9 @@ export function Chart({
         });
 
         const link = document.createElement("a");
-        link.download = `${fileName}.${format}`;
+        // use .jpg extension for jpeg for better cross-browser handling
+        const ext = format === 'jpeg' ? 'jpg' : format;
+        link.download = `${fileName}.${ext}`;
         link.href = url;
         document.body.appendChild(link);
         link.click();
@@ -322,7 +324,8 @@ export function Chart({
     const finalOption: EChartsOption = {
         ...baseOption,
         ...overrideOption,
-        toolbox: toolboxConfig || overrideOption.toolbox,
+        // cast toolboxConfig to any so we don't get incompatible literal type errors
+        toolbox: (toolboxConfig as any) || overrideOption.toolbox,
         radar: mergedRadar,
         series: overrideSeriesArray
             ? builtSeries.map((baseSeries, index) => {

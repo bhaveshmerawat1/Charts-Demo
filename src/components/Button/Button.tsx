@@ -33,9 +33,9 @@ const Button: React.FC<ButtonProps> = ({
 
   const variantStyles: Record<string, string> = {
     primary:
-      "border border-blue-600 bg-white rounded-sm text-blue-600 hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed",
+      "border border-blue-600 rounded-sm text-blue-600 hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed",
     secondary:
-      "bg-white border border-red-600 text-red-600 rounded-sm hover:bg-red-600 hover:text-white hover:border-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+      "border border-red-600 text-red-600 rounded-sm hover:bg-red-600 hover:text-white hover:border-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
   };
 
   return (

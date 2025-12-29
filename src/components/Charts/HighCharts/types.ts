@@ -8,7 +8,7 @@ export const CHART_TYPES = [
   "scatter",
   "spline",
   "areaspline"
-] as const;
+] 
 
-export type ChartType = typeof CHART_TYPES[number];
+// export type ChartType = typeof CHART_TYPES[number];
 // Define a type ChartType as any of the values in CHART_TYPES array
