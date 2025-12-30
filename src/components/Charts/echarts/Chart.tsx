@@ -249,7 +249,7 @@ export function Chart({
     };
 
     // Export functionality
-    const handleExport = (format: "png" | "jpeg" | "svg" = "png") => {
+    const handleExport = (format: "png" | "jpg" | "svg" = "png") => {
         const chartInstance = chartRef.current?.getEchartsInstance();
         if (!chartInstance) return;
 
@@ -263,9 +263,7 @@ export function Chart({
         });
 
         const link = document.createElement("a");
-        // use .jpg extension for jpeg for better cross-browser handling
-        const ext = format === 'jpeg' ? 'jpg' : format;
-        link.download = `${fileName}.${ext}`;
+        link.download = `${fileName}.${format}`;
         link.href = url;
         document.body.appendChild(link);
         link.click();
@@ -415,7 +413,7 @@ export function Chart({
                             {title && <h3 className={clsx("text-lg font-medium text-gray-800", titleClassName)}>{title}</h3>}
                             {subtitle && <p className={clsx("text-sm text-gray-500 mt-1", subtitleClassName)}>{subtitle}</p>}
                         </div>
-                
+
                     </div>
 
                     {enableDrillDown && drillDownLevel.length > 0 && (
