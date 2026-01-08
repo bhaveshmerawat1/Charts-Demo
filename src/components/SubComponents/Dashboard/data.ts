@@ -21,7 +21,7 @@ export const studentsByClass = [
 
 export const streamPieSeries = [
   {
-    type: "pie",
+    type: "column",
     name: "Students",
     data: [
       { name: "Science", y: 1000, drilldown: "Science", color: "#2563eb" },

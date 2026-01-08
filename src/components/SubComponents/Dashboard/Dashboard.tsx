@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import GlobalHighchart from "@/components/Charts/HighCharts/GlobalHighchart";
+import GlobalHighchart from "@/components/Charts/HighCharts/HighchartWrapper";
 import {
   summary,
   studentsByClass,

@@ -14,6 +14,7 @@ interface ButtonProps {
   onMouseLeave?: () => void;
   arialabel?: string;
   isTestID?: string
+  icon?: React.ReactNode;
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -26,16 +27,17 @@ const Button: React.FC<ButtonProps> = ({
   arialabel,
   onMouseEnter,
   onMouseLeave,
-  isTestID
+  isTestID,
+  icon
 }) => {
   const baseStyles =
-    "flex items-center justify-center gap-0 px-3 py-2 group transition-all duration-400 ease-in-out w-full max-w-max relative cursor-pointer";
+    "flex items-center justify-center gap-0 px-4 py-2 group transition-all duration-400 ease-in-out relative cursor-pointer text-md";
 
   const variantStyles: Record<string, string> = {
     primary:
-      "border border-blue-600 rounded-sm text-blue-600 hover:bg-blue-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed",
+      "border border-gray-300 dark:border-gray-600 rounded-sm text-gray-900 dark:text-gray-100 dark:bg-gray-800 bg-white hover:bg-gray-600 hover:text-white dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors",
     secondary:
-      "border border-red-600 text-red-600 rounded-sm hover:bg-red-600 hover:text-white hover:border-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+      "border border-red-600 dark:border-red-500 text-red-600 dark:text-red-400 rounded-sm hover:bg-red-600 hover:text-white hover:border-red-600 dark:hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
   };
 
   return (
@@ -49,6 +51,7 @@ const Button: React.FC<ButtonProps> = ({
       className={clsx(baseStyles, variantStyles[variant], className)}
       data-testid={isTestID}
     >
+      {icon && <span className="mr-1">{icon}</span>}
       {children}
     </button>
   );

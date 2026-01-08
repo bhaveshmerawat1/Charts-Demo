@@ -3,13 +3,14 @@
 import Highcharts from "./config";
 import HighchartsReact from "highcharts-react-official";
 import { useMemo } from "react";
-import { ChartType } from "./types";
+import { CHART_TYPES } from "./types";
 import { lightTheme, darkTheme } from "./themes";
 
 // Props for GlobalHighchart component
-interface GlobalHighchartProps {
-  type?: ChartType; // Chart type
+interface HighchartWrapperProps {
+  type?: (typeof CHART_TYPES)[number]; // Chart type
   title?: string; // Chart properties
+  subTitle?: string // Sub title
   categories?: string[]; // Categories for xAxis
   series: Highcharts.SeriesOptionsType[]; // Data series
   yAxisTitle?: string; // yAxis title
@@ -17,20 +18,23 @@ interface GlobalHighchartProps {
   theme?: "light" | "dark"; // Theme selection
   drilldownSeries?: Highcharts.SeriesOptionsType[]; // Drilldown series data
   optionsOverride?: Highcharts.Options; // Options to override defaults
+  styledMode?:boolean
 }
 
 // GlobalHighchart component definition
-export default function GlobalHighchart({
+export default function HighchartWrapper({
   type = "line", // Default chart type
   title, // Chart title
+  subTitle, // Sub title
   categories, // Categories for xAxis
   series, // Data series
   yAxisTitle, // yAxis title
   height = 350, // Default height
   theme = "light", // Default theme
   drilldownSeries, // Drilldown series data
-  optionsOverride // Options to override defaults
-}: GlobalHighchartProps) {
+  optionsOverride, // Options to override defaults
+  styledMode
+}: HighchartWrapperProps) {
 
   // Select theme configuration
   const themeConfig = theme === "dark" ? darkTheme : lightTheme; // Choose theme based on prop
@@ -40,18 +44,46 @@ export default function GlobalHighchart({
     ...themeConfig,
 
     chart: {
+      ...themeConfig.chart,
       type, // Chart type
-      height // Chart height
+      height, // Chart height
+      styledMode
     },
 
     title: {
       text: title, // Chart title
+      style: {
+        color: themeConfig.title?.style?.color
+      }
+    },
+    subtitle: {
+      text: subTitle,
+      style: {
+        color: themeConfig.subtitle?.style?.color
+      }
     },
 
-    xAxis: categories ? { categories } : undefined, // xAxis categories
+    xAxis: categories ? {
+      categories,
+      labels: {
+        style: {
+          color: themeConfig.title?.style?.color
+        }
+      }
+    } : undefined, // xAxis categories
 
     yAxis: {
-      title: { text: yAxisTitle }, // yAxis title
+      title: {
+        text: yAxisTitle,
+        style: {
+          color: themeConfig.title?.style?.color
+        }
+      }, // yAxis title
+      labels: {
+        style: {
+          color: themeConfig.title?.style?.color
+        }
+      }
     },
 
     series, // Data series
@@ -83,10 +115,14 @@ export default function GlobalHighchart({
   ]);
 
   return (
-    <HighchartsReact
-      highcharts={Highcharts}
-      options={options}
-      allowChartUpdate
-    />
+    <div className={""}>
+      <HighchartsReact
+        highcharts={Highcharts}
+        options={options}
+        allowChartUpdate
+        key={theme}
+      />
+    </div>
+
   );
 }
