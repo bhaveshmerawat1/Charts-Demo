@@ -1,16 +1,12 @@
 "use client";
 
-import MarketDashboard from "@/components/SubComponents/Stock/MarketDashboard";
-import StockDashBoard from "@/components/SubComponents/Stock/StockDashBoard";
 import { useState } from "react";
 
 export default function HighCharts() {
-  const [symbol, setSymbol] = useState("AAPL");
   return (
     <div className="w-full dark:bg-gray-900 min-h-screen transition-colors">
       <div className="container mx-auto p-2">
-        {/* <StockDashBoard /> */}
-        <MarketDashboard />
+        <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">HighCharts Example</h1>
       </div>
     </div >
   );
