@@ -33,7 +33,7 @@ export default function SelectDropdown({
   }, []);
 
   return (
-    <div className={`w-full relative ${className}`} ref={wrapperRef}>
+    <div className={`relative ${className}`} ref={wrapperRef}>
       <label className="text-md text-gray-900 mb-1 block">{label}</label>
 
       {/* SELECT BOX */}

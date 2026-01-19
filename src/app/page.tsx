@@ -21,7 +21,7 @@ export default function Home() {
             className="object-contain"
           />
         </div>
-        <div className="mt-8 flex gap-4 justify-center w-full">
+        <div className="mt-8 flex gap-4 justify-center w-full flex-wrap">
           <Button children={"ECharts"}
             variant="primary"
             disabled={false}
