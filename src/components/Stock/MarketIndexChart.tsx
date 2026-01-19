@@ -43,6 +43,38 @@ const MarketIndexChart: React.FC = () => {
         chart: {
           backgroundColor: 'transparent',
           height: 350,
+          events: {
+            load: function () {
+              const series = this.series[0];
+              const lastPoint = series.data[series.data.length - 1];
+
+              // Add custom marker with blinking animation
+              if (lastPoint) {
+                lastPoint.update({
+                  marker: {
+                    enabled: true,
+                    radius: 6,
+                    fillColor: isPositive ? '#1a1d1b' : '#ef4444',
+                    lineWidth: 2,
+                    lineColor: '#fff',
+                    symbol: 'circle',
+                    states: {
+                      hover: {
+                        enabled: true,
+                        radius: 8
+                      }
+                    }
+                  }
+                });
+
+                // Apply blinking animation to the last point's graphic
+                const graphic = lastPoint.graphic;
+                if (graphic) {
+                  graphic.element.setAttribute('class', 'blink-marker');
+                }
+              }
+            }
+          }
         },
         title: {
           text: '',
@@ -106,6 +138,15 @@ const MarketIndexChart: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+      <style jsx>{`
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        :global(.blink-marker) {
+          animation: blink 0.5s ease-in-out infinite;
+        }
+      `}</style>
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-2xl font-bold text-blue-600">
@@ -122,7 +163,7 @@ const MarketIndexChart: React.FC = () => {
                 : 'text-red-600'
               }
             `}>
-              {marketIndex && marketIndex.change >= 0 ? '▼' : '▲'}
+              {marketIndex && marketIndex.change >= 0 ? '▲' : '▼'}
               {Math.abs(marketIndex?.change || 0).toFixed(2)} ({marketIndex?.changePercent.toFixed(2)}%)
             </span>
           </div>
