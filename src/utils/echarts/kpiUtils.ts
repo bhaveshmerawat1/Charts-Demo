@@ -1,5 +1,3 @@
-import dashboardData from "@/utils/echarts/dashboardData.json";
-
 export interface KPICardData {
   label: string;
   value: string;
@@ -7,6 +5,16 @@ export interface KPICardData {
   trend: "up" | "down";
   variant?: "primary" | "default";
   icon?: "doctor" | "nurse" | "staff" | "patients";
+}
+
+interface DashboardData {
+  kpis: {
+    totalRevenue: number;
+    revenueGrowth: number;
+    totalOrders: number;
+    avgOrderValue: number;
+    conversionRate: number;
+  };
 }
 
 /**
@@ -31,37 +39,39 @@ export function formatNumber(value: number): string {
 /**
  * Prepare KPI cards data from dashboard data
  */
-export function prepareKPICards(): KPICardData[] {
+export function prepareKPICards(dashboardData: DashboardData): KPICardData[] {
+  const { kpis } = dashboardData;
+  
   return [
     {
       label: "Total Revenue",
-      value: formatCurrency(dashboardData.totalRevenue),
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
+      value: formatCurrency(kpis.totalRevenue),
+      change: `${kpis.revenueGrowth.toFixed(1)}%`,
+      trend: kpis.revenueGrowth >= 0 ? "up" : "down",
       variant: "primary",
       icon: "doctor",
     },
     {
       label: "Total Orders",
-      value: formatNumber(dashboardData.totalOrders),
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
+      value: formatNumber(kpis.totalOrders),
+      change: `${kpis.revenueGrowth.toFixed(1)}%`,
+      trend: kpis.revenueGrowth >= 0 ? "up" : "down",
       variant: "default",
       icon: "nurse",
     },
     {
       label: "Average Order Value",
-      value: formatCurrency(dashboardData.avgOrderValue),
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
+      value: formatCurrency(kpis.avgOrderValue),
+      change: `${kpis.revenueGrowth.toFixed(1)}%`,
+      trend: kpis.revenueGrowth >= 0 ? "up" : "down",
       variant: "default",
       icon: "staff",
     },
     {
       label: "Conversion Rate",
-      value: `${dashboardData.conversionRate}%`,
-      change: `${dashboardData.revenueGrowth}%`,
-      trend: "up",
+      value: `${kpis.conversionRate.toFixed(1)}%`,
+      change: `${kpis.revenueGrowth.toFixed(1)}%`,
+      trend: kpis.revenueGrowth >= 0 ? "up" : "down",
       variant: "default",
       icon: "patients",
     },

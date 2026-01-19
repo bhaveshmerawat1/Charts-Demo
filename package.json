@@ -18,6 +18,7 @@
     "echarts-for-react": "^3.0.5",
     "highcharts": "^11.4.8",
     "highcharts-react-official": "^3.2.3",
+    "html2canvas-pro": "^1.6.3",
     "jspdf": "^3.0.4",
     "jspdf-autotable": "^5.0.2",
     "next": "16.0.10",

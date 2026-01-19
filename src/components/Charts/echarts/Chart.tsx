@@ -88,6 +88,20 @@ export interface ChartProps {
     legendPosition?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
     legendOrientation?: "horizontal" | "vertical";
     legendConfig?: any;
+    dataZoom?: boolean | {
+        enabled?: boolean;
+        type?: "slider" | "inside";
+        start?: number;
+        end?: number;
+        height?: number;
+        handleStyle?: any;
+        dataBackground?: any;
+        selectedDataBackground?: any;
+        fillerColor?: string;
+        borderColor?: string;
+        handleIcon?: string;
+        handleSize?: string | number;
+    };
 }
 
 // Generate random colors for pie charts
@@ -134,6 +148,7 @@ export function Chart({
     legendPosition = "top-right",
     legendOrientation = "vertical",
     legendConfig,
+    dataZoom,
 }: ChartProps) {
     const chartRef = useRef<ReactECharts>(null);
 
@@ -172,14 +187,90 @@ export function Chart({
             ? generateRandomColors(currentData.length)
             : colors;
 
+    // Calculate theme colors early (needed for gauge charts)
+    const isDark = theme === "dark";
+    const textColor = isDark ? "#e5e7eb" : "#111827";
+    const backgroundColor = isDark ? "#1f2937" : "#ffffff";
+    const gridColor = isDark ? "#374151" : "#e5e7eb";
+    const axisLabelColor = isDark ? "#9ca3af" : "#6b7280";
+
     const builtSeries: SeriesOption[] = currentSeries.map((s, index) => {
         const color = finalColors?.[index % (finalColors?.length || 1)];
 
         switch (s.type) {
+            case "gauge":
+                // Gauge charts need special handling - they use a single value, not array of name/value pairs
+                const gaugeValue = currentData.length > 0
+                    ? (s.valueAccessor?.(currentData[0]) || getValue(currentData[0], undefined, valueKey) || 0)
+                    : 0;
+                
+                // Extract gauge-specific config from extra
+                const {
+                    min = 0,
+                    max = 100,
+                    detail = { formatter: "{value}" },
+                    axisLine = {},
+                    pointer = {},
+                    splitLine = {},
+                    axisTick = {},
+                    axisLabel = {},
+                    ...restGaugeExtra
+                } = (s.extra as any) || {};
+                
+                return {
+                    type: "gauge",
+                    name: s.name,
+                    radius: s.radius || "75%",
+                    center: ["50%", "60%"],
+                    min,
+                    max,
+                    splitNumber: 10,
+                    data: [{ value: gaugeValue, name: s.name || "" }],
+                    detail: {
+                        ...detail,
+                        offsetCenter: [0, "40%"],
+                        fontSize: 20,
+                        fontWeight: "bold",
+                        color: textColor,
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            width: 15,
+                            color: [[1, "#e5e7eb"]],
+                            ...axisLine.lineStyle,
+                        },
+                        ...axisLine,
+                    },
+                    pointer: {
+                        width: 5,
+                        length: "60%",
+                        ...pointer,
+                    },
+                    splitLine: {
+                        length: 10,
+                        lineStyle: {
+                            color: gridColor,
+                        },
+                        ...splitLine,
+                    },
+                    axisTick: {
+                        length: 8,
+                        lineStyle: {
+                            color: gridColor,
+                        },
+                        ...axisTick,
+                    },
+                    axisLabel: {
+                        color: axisLabelColor,
+                        fontSize: 12,
+                        ...axisLabel,
+                    },
+                    ...restGaugeExtra,
+                } as SeriesOption;
+
             case "pie":
             case "funnel":
-            case "gauge":
-                const isPieType = ["pie", "funnel", "gauge"].includes(s.type);
+                const isPieType = ["pie", "funnel"].includes(s.type);
                 // Determine if labels should be shown
                 // Priority: showLabels prop > extra.label.show > default (false)
                 const shouldShowLabels = showLabels !== undefined 
@@ -286,12 +377,6 @@ export function Chart({
         }
     });
 
-    const isDark = theme === "dark";
-    const textColor = isDark ? "#e5e7eb" : "#111827";
-    const backgroundColor = isDark ? "#1f2937" : "#ffffff";
-    const gridColor = isDark ? "#374151" : "#e5e7eb";
-    const axisLabelColor = isDark ? "#9ca3af" : "#6b7280";
-
     const baseOption: EChartsOption = {
         backgroundColor: backgroundColor,
         title:
@@ -318,13 +403,22 @@ export function Chart({
             },
         },
 
-        grid: {
-            left: "3%",
-            right: "4%",
-            bottom: "3%",
-            containLabel: true,
-            borderColor: gridColor,
-        },
+        grid: (() => {
+            // Check if dataZoom should be enabled to adjust bottom margin
+            const shouldEnableDataZoom = dataZoom === true || (typeof dataZoom === 'object' && dataZoom.enabled !== false);
+            const hasXAxis = currentSeries.some((s) => ["line", "bar", "scatter"].includes(s.type)) && currentData.length > 0;
+            const isTimeBased = currentXKey === "date" || currentXKey === "period";
+            const needsSliderSpace = shouldEnableDataZoom && hasXAxis && isTimeBased;
+            const sliderHeight = typeof dataZoom === 'object' && dataZoom.height ? dataZoom.height : 20;
+            
+            return {
+                left: "3%",
+                right: "4%",
+                bottom: needsSliderSpace ? (sliderHeight + 30) + "px" : "3%",
+                containLabel: true,
+                borderColor: gridColor,
+            };
+        })(),
 
         xAxis:
             currentSeries.some((s) => ["line", "bar", "scatter"].includes(s.type)) && currentData.length
@@ -341,6 +435,7 @@ export function Chart({
                     },
                     axisLabel: {
                         color: axisLabelColor,
+                         interval: currentData.length <= 6 ? 0 : "auto",
                     },
                     splitLine: {
                         show: false,
@@ -451,6 +546,87 @@ export function Chart({
             return legendConfig 
                 ? { ...baseLegendConfig, ...legendConfig }
                 : baseLegendConfig;
+        })(),
+
+        dataZoom: (() => {
+            // Check if dataZoom should be enabled
+            const shouldEnableDataZoom = dataZoom === true || (typeof dataZoom === 'object' && dataZoom.enabled !== false);
+            
+            if (!shouldEnableDataZoom) {
+                return undefined;
+            }
+
+            // Only enable for charts with xAxis (line, bar charts with time-based data)
+            const hasXAxis = currentSeries.some((s) => ["line", "bar", "scatter"].includes(s.type)) && currentData.length > 0;
+            if (!hasXAxis) {
+                return undefined;
+            }
+
+            // Determine if this is a time-based chart (xKey is 'date' or 'period')
+            const isTimeBased = currentXKey === "date" || currentXKey === "period";
+
+            if (!isTimeBased) {
+                return undefined;
+            }
+
+            // Parse dataZoom config
+            const dataZoomConfig = typeof dataZoom === 'object' ? dataZoom : {};
+            const sliderType = dataZoomConfig.type || 'slider';
+            // Default to showing last 10% of data (most recent data)
+            const start = dataZoomConfig.start !== undefined ? dataZoomConfig.start : 90;
+            const end = dataZoomConfig.end !== undefined ? dataZoomConfig.end : 100;
+            const sliderHeight = dataZoomConfig.height || 20;
+
+            // Theme colors for dataZoom
+            const handleColor = isDark ? "#60a5fa" : "#3b82f6";
+            const borderColor = isDark ? "#4b5563" : "#9ca3af";
+            const fillerColor = isDark ? "rgba(96, 165, 250, 0.2)" : "rgba(59, 130, 246, 0.2)";
+            const dataBackgroundColor = isDark ? "rgba(75, 85, 99, 0.3)" : "rgba(229, 231, 235, 0.5)";
+            const selectedDataBackgroundColor = isDark ? "rgba(96, 165, 250, 0.4)" : "rgba(59, 130, 246, 0.4)";
+            const textStyleColor = isDark ? "#9ca3af" : "#6b7280";
+
+            return [
+                {
+                    type: sliderType,
+                    xAxisIndex: 0,
+                    start,
+                    end,
+                    height: sliderHeight,
+                    bottom: 10,
+                    handleStyle: {
+                        color: handleColor,
+                        borderColor: borderColor,
+                        ...dataZoomConfig.handleStyle,
+                    },
+                    dataBackground: {
+                        areaStyle: {
+                            color: dataBackgroundColor,
+                        },
+                        lineStyle: {
+                            color: borderColor,
+                            opacity: 0.3,
+                        },
+                        ...dataZoomConfig.dataBackground,
+                    },
+                    selectedDataBackground: {
+                        areaStyle: {
+                            color: selectedDataBackgroundColor,
+                        },
+                        lineStyle: {
+                            color: handleColor,
+                            opacity: 0.5,
+                        },
+                        ...dataZoomConfig.selectedDataBackground,
+                    },
+                    fillerColor: dataZoomConfig.fillerColor || fillerColor,
+                    borderColor: dataZoomConfig.borderColor || borderColor,
+                    handleIcon: dataZoomConfig.handleIcon || 'path://M30.9,53.2C16.8,53.2,5.3,41.7,5.3,27.6S16.8,2,30.9,2C45,2,56.4,13.5,56.4,27.6S45,53.2,30.9,53.2z M30.9,3.5C17.6,3.5,6.8,14.4,6.8,27.6c0,13.3,10.8,24.1,24.1,24.1C44.2,51.7,55,40.9,55,27.6C54.9,14.4,44.1,3.5,30.9,3.5z M36.9,35.8c0,0.6-0.4,1-1,1H26.8c-0.6,0-1-0.4-1-1V19.5c0-0.6,0.4-1,1-1h9.2c0.6,0,1,0.4,1,1V35.8z',
+                    handleSize: dataZoomConfig.handleSize || '120%',
+                    textStyle: {
+                        color: textStyleColor,
+                    },
+                },
+            ];
         })(),
 
         series: builtSeries,
@@ -571,7 +747,7 @@ export function Chart({
                 merged.data = baseXAxisAny.data;
             }
             // Preserve type from base if not provided in override
-            if (!overrideXAxisAny.type && baseXAxisAny.type) {
+            if (!overrideXAxisAny.type && baseXAxisAny.type) {  
                 merged.type = baseXAxisAny.type;
             }
             return merged;
@@ -794,7 +970,14 @@ export function Chart({
             )}
 
             <div className={clsx("w-full", bodyClassName)}>
-                <ReactECharts ref={chartRef} option={finalOption} style={{ height: chartHeight, width: chartWidth, ...style }} onEvents={eventHandlers} />
+                <ReactECharts 
+                    ref={chartRef} 
+                    option={finalOption} 
+                    style={{ height: chartHeight, width: chartWidth, ...style }} 
+                    onEvents={eventHandlers}
+                    notMerge={false}
+                    opts={{ renderer: 'canvas' }}
+                />
             </div>
         </div>
     );
