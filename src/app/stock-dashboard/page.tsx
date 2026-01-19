@@ -9,6 +9,15 @@ import StockPriceChart from '@/components/Stock/StockPriceChart';
 import ShareholdingPattern from '@/components/Stock/ShareholdingPattern';
 import SelectDropdown from '@/components/SelectDropdown/SelectDropdown';
 
+
+const StockDashboard = () => {
+  return (
+    <StockProvider>
+      <StockDashboardContent />
+    </StockProvider>
+  );
+};
+
 const StockDashboardContent = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const { handleExport, selectedStock } = useStock();
@@ -72,14 +81,6 @@ const StockDashboardContent = () => {
         <ShareholdingPattern />
       </div>
     </div>
-  );
-};
-
-const StockDashboard = () => {
-  return (
-    <StockProvider>
-      <StockDashboardContent />
-    </StockProvider>
   );
 };
 

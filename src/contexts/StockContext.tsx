@@ -162,7 +162,7 @@ export function StockProvider({ children }: { children: ReactNode }) {
   const [timeSeries, setTimeSeries] = useState<TimeSeries | null>(null);
   const [activeStocks, setActiveStocks] = useState<ActiveStock[]>([]);
   const [marketIndex, setMarketIndex] = useState<MarketIndex | null>(null);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>('1Yr');
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('3Yr');
 
   const [isLoadingQuote, setIsLoadingQuote] = useState(false);
   const [isLoadingTimeSeries, setIsLoadingTimeSeries] = useState(false);
@@ -250,10 +250,12 @@ export function StockProvider({ children }: { children: ReactNode }) {
   // Refresh all market data
   const refreshMarketData = useCallback(async () => {
     await Promise.all([
-      fetchActiveStocks(),
-      fetchMarketIndex()
+      fetchActiveStocks()
     ]);
-  }, [fetchActiveStocks, fetchMarketIndex]);
+    if (selectedStock) {
+      await fetchMarketIndex();
+    }
+  }, [fetchActiveStocks, fetchMarketIndex, selectedStock]);
 
   // Export functionality
   const handleExport = useCallback(async (exportType: string, contentRef: React.RefObject<HTMLDivElement>) => {

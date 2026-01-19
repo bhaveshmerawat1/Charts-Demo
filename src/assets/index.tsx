@@ -5,7 +5,6 @@ const images = {
   totalStudentIcon: require('./groupStudentsIcon.png'),
   maleTeacherIcon: require('./maleTechIcon.png'),
   bothTeachersIcon: require('./bothTeacherIcon.png'),
-
 };
 
 export default images;
